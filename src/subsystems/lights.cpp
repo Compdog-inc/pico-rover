@@ -10,133 +10,113 @@
 #include <pico/stdlib.h>
 #include <hardware/pwm.h>
 
+// Config headers
+#include "config/options.h"
+
 #include "subsystems/lights.h"
 
-#define LIGHT_LEFT 9
-#define LIGHT_RIGHT 10
-
-static TaskHandle_t animationTask;
-static bool runAnimationTask = true;
-
-static LightMode leftMode = LightMode::Off;
-static LightMode rightMode = LightMode::Off;
-
-#define PULSE_LENGTH 2000000
-#define PULSE_HALF_LENGTH 1000000
-#define PULSE_DIVISOR 16
-
-#define BLINK_LENGTH 1000000
-#define BLINK_ON_LENGTH 250000
-
-void light_subsystem_set(uint gpio, uint16_t level)
+void pwm_set_squared(uint gpio, uint16_t level)
 {
-    float flt = (float)level / (float)UINT16_MAX;
-    flt *= flt;
-    uint16_t out = (uint16_t)std::floor(flt * UINT16_MAX);
-    pwm_set_gpio_level(gpio, out);
+    uint16_t squared = (level >> 8) * (level >> 8);
+    pwm_set_gpio_level(gpio, squared);
 }
 
-void light_subsystem_run(uint gpio, LightMode mode)
+void apply_pattern(uint gpio, Pattern pattern)
 {
-    switch (mode)
+    switch (pattern)
     {
-    case LightMode::Off:
+    case Pattern::Off:
     {
-        light_subsystem_set(gpio, 0);
+        pwm_set_squared(gpio, 0);
     }
     break;
-    case LightMode::On:
+    case Pattern::On:
     {
-        light_subsystem_set(gpio, 0xFFFF);
+        pwm_set_squared(gpio, 0xFFFF);
     }
     break;
-    case LightMode::Pulse:
+    case Pattern::Pulse:
     {
-        uint32_t cycleTime = time_us_32() % PULSE_LENGTH;
-        if (cycleTime < PULSE_HALF_LENGTH)
-            light_subsystem_set(gpio, cycleTime / PULSE_DIVISOR);
+        uint32_t cycleTime = time_us_32() % Config::Lights::PULSE_LENGTH;
+        if (cycleTime < Config::Lights::PULSE_HALF_LENGTH)
+            pwm_set_squared(gpio, cycleTime / Config::Lights::PULSE_DIVISOR);
         else
-            light_subsystem_set(gpio, (PULSE_LENGTH - cycleTime) / PULSE_DIVISOR);
+            pwm_set_squared(gpio, (Config::Lights::PULSE_LENGTH - cycleTime) / Config::Lights::PULSE_DIVISOR);
     }
     break;
-    case LightMode::Blink:
+    case Pattern::Blink:
     {
-        uint32_t cycleTime = time_us_32() % BLINK_LENGTH;
-        if (cycleTime < BLINK_ON_LENGTH)
-            light_subsystem_set(gpio, 0xFFFF);
+        uint32_t cycleTime = time_us_32() % Config::Lights::BLINK_LENGTH;
+        if (cycleTime < Config::Lights::BLINK_ON_LENGTH)
+            pwm_set_squared(gpio, 0xFFFF);
         else
-            light_subsystem_set(gpio, 0);
+            pwm_set_squared(gpio, 0);
     }
     break;
-    case LightMode::Alt1:
+    case Pattern::Alt1:
     {
-        uint32_t cycleTime = time_us_32() % PULSE_LENGTH;
-        if (cycleTime < PULSE_HALF_LENGTH)
-            light_subsystem_set(gpio, cycleTime / PULSE_DIVISOR);
+        uint32_t cycleTime = time_us_32() % Config::Lights::PULSE_LENGTH;
+        if (cycleTime < Config::Lights::PULSE_HALF_LENGTH)
+            pwm_set_squared(gpio, cycleTime / Config::Lights::PULSE_DIVISOR);
         else
-            light_subsystem_set(gpio, (PULSE_LENGTH - cycleTime) / PULSE_DIVISOR);
+            pwm_set_squared(gpio, (Config::Lights::PULSE_LENGTH - cycleTime) / Config::Lights::PULSE_DIVISOR);
     }
     break;
-    case LightMode::Alt2:
+    case Pattern::Alt2:
     {
-        uint32_t cycleTime = time_us_32() % PULSE_LENGTH;
-        if (cycleTime < PULSE_HALF_LENGTH)
-            light_subsystem_set(gpio, 62500 - cycleTime / PULSE_DIVISOR);
+        uint32_t cycleTime = time_us_32() % Config::Lights::PULSE_LENGTH;
+        if (cycleTime < Config::Lights::PULSE_HALF_LENGTH)
+            pwm_set_squared(gpio, 62500 - cycleTime / Config::Lights::PULSE_DIVISOR);
         else
-            light_subsystem_set(gpio, 62500 - (PULSE_LENGTH - cycleTime) / PULSE_DIVISOR);
+            pwm_set_squared(gpio, 62500 - (Config::Lights::PULSE_LENGTH - cycleTime) / Config::Lights::PULSE_DIVISOR);
     }
     break;
     }
 }
 
-void animation_task(__unused void *params)
+void animation_task(void *pv_lights)
 {
-    while (runAnimationTask)
+    Lights *lights = (Lights *)pv_lights;
+
+    while (lights->isAnimationRunning())
     {
-        light_subsystem_run(LIGHT_LEFT, leftMode);
-        light_subsystem_run(LIGHT_RIGHT, rightMode);
+        apply_pattern(lights->getLeftRingIndicatorPin(), lights->getLeftRingIndicatorPattern());
+        apply_pattern(lights->getRightRingIndicatorPin(), lights->getRightRingIndicatorPattern());
         vTaskDelay(pdMS_TO_TICKS(2));
     }
 
     vTaskDelete(NULL);
 }
 
-void light_subsystem_init()
+Lights::Lights() : animationRunning(true), leftRingIndicatorPin(Config::Lights::RING_INDICATOR_LEFT_PIN), rightRingIndicatorPin(Config::Lights::RING_INDICATOR_RIGHT_PIN)
 {
-    gpio_init(LIGHT_LEFT);
-    gpio_init(LIGHT_RIGHT);
+    gpio_init(leftRingIndicatorPin);
+    gpio_init(rightRingIndicatorPin);
 
-    gpio_set_dir(LIGHT_LEFT, true);
-    gpio_set_dir(LIGHT_RIGHT, true);
+    gpio_set_dir(leftRingIndicatorPin, true);
+    gpio_set_dir(rightRingIndicatorPin, true);
 
-    gpio_set_function(LIGHT_LEFT, GPIO_FUNC_PWM);
-    gpio_set_function(LIGHT_RIGHT, GPIO_FUNC_PWM);
+    gpio_set_function(leftRingIndicatorPin, GPIO_FUNC_PWM);
+    gpio_set_function(rightRingIndicatorPin, GPIO_FUNC_PWM);
 
-    uint slice_num_left = pwm_gpio_to_slice_num(LIGHT_LEFT);
-    uint slice_num_right = pwm_gpio_to_slice_num(LIGHT_RIGHT);
+    uint slice_num_left = pwm_gpio_to_slice_num(leftRingIndicatorPin);
+    uint slice_num_right = pwm_gpio_to_slice_num(rightRingIndicatorPin);
 
     pwm_config config = pwm_get_default_config();
     pwm_config_set_clkdiv(&config, 4.f);
     pwm_init(slice_num_left, &config, true);
     pwm_init(slice_num_right, &config, true);
 
-    xTaskCreate(animation_task, "LightAnimationThread", configMINIMAL_STACK_SIZE, NULL, (tskIDLE_PRIORITY + 2UL), &animationTask);
+    xTaskCreate(animation_task, "LightAnimationThread", configMINIMAL_STACK_SIZE, this, (tskIDLE_PRIORITY + 2UL), &animationTask);
 }
 
-void light_subsystem_deinit()
+Lights::~Lights()
 {
-    runAnimationTask = false;
+    animationRunning = false;
 }
 
-void light_subsystem_set(Light light, LightMode mode)
+void Lights::setRingIndicatorPattern(Pattern left, Pattern right)
 {
-    switch (light)
-    {
-    case Light::Left:
-        leftMode = mode;
-        break;
-    case Light::Right:
-        rightMode = mode;
-        break;
-    }
+    leftRingIndicatorPattern = left;
+    rightRingIndicatorPattern = right;
 }
