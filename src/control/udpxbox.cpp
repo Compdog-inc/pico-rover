@@ -25,10 +25,10 @@ UDPXbox::~UDPXbox()
 
 Units<float> UDPXbox::getForward()
 {
-    return Units<float>::meters(inputs.axis_Y);
+    return Units<float>::meters(Control::Xbox::getAxis(inputs.axis_Y));
 }
 
 Units<float> UDPXbox::getRotation()
 {
-    return Units<float>::radians(inputs.axis_X * 10);
+    return Units<float>::radians(Control::Xbox::getAxis(inputs.axis_X) * 10);
 }
