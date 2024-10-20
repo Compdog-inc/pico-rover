@@ -49,6 +49,8 @@ add_executable(rover
         src/subsystems/drivetrain.cpp
         src/subsystems/lights.cpp
         src/subsystems/battery.cpp
+        # control
+        src/control/udpxbox.cpp
         )
 
 # Include headers

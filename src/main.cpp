@@ -27,6 +27,9 @@
 #include "subsystems/lights.h"
 #include "subsystems/battery.h"
 
+// Control
+#include "control/udpxbox.h"
+
 using namespace std::literals;
 
 static Drivetrain *drivetrain;
@@ -50,38 +53,19 @@ static void main_task(__unused void *params)
         return;
     }
 
-    // Create drive command socket
-    UdpSocket *driveSocket = new UdpSocket(5001);
-    driveSocket->receiveCallback = [](UdpSocket *socket, Datagram *datagram)
-    {
-        if (datagram->length == 4)
-        {
-            int16_t speed;
-            int16_t rotation;
-            std::memcpy(&speed, &((uint8_t *)datagram->data)[0], sizeof(int16_t));
-            std::memcpy(&rotation, &((uint8_t *)datagram->data)[2], sizeof(int16_t));
-            drivetrain->drive(Units<float>::meters((float)speed / (float)INT16_MAX), Units<float>::radians((float)rotation / (float)INT16_MAX * 10.0f));
-        }
-    };
-
-    // Broadcast to port 5002 every second
-    std::string_view str = "Hello from UDP!\r\n"sv;
-    Datagram dg(str.data(), str.length(), 5002);
+    UDPXbox *xbox = new UDPXbox();
 
     while (true)
     {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        driveSocket->broadcast(&dg);
+        vTaskDelay(pdMS_TO_TICKS(20));
+        drivetrain->drive(xbox->getForward(), xbox->getRotation());
     }
 
-    // Clean up socket and radio
-    driveSocket->deinit();
-    driveSocket->~UdpSocket();
-
-    radio->deinit();
-    radio->~Radio();
+    xbox->~UDPXbox();
 
     // Deinitialize subsystems
+    radio->deinit();
+    radio->~Radio();
     delete drivetrain;
     lights->~Lights();
     battery->~Battery();

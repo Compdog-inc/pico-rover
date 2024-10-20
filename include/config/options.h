@@ -27,6 +27,11 @@ namespace Config
         static constexpr int64_t UPDATE_TIME_US = 1000 * UPDATE_TIME_MS;
     }
 
+    namespace Control
+    {
+        static constexpr int XBOX_UDP_PORT = 5001;
+    }
+
     namespace Drivetrain
     {
         static constexpr Units ROBOT_WHEEL_DISTANCE = Units<float>::inches(14.5);
