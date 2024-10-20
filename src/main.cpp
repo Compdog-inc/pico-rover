@@ -23,19 +23,22 @@
 #include <board/temperature.h>
 
 // Subsystems
-#include "subsystems/lights.h"
 #include "subsystems/drivetrain.h"
+#include "subsystems/lights.h"
+#include "subsystems/battery.h"
 
 using namespace std::literals;
 
 static Drivetrain *drivetrain;
 static Lights *lights;
+static Battery *battery;
 
 static void main_task(__unused void *params)
 {
     // Initialize and create subsystems
     drivetrain = new Drivetrain();
     lights = new Lights();
+    battery = new Battery();
 
     // Create wifi radio
     Radio *radio = new Radio();
@@ -80,38 +83,9 @@ static void main_task(__unused void *params)
     // Deinitialize subsystems
     delete drivetrain;
     lights->~Lights();
+    battery->~Battery();
 
     vTaskDelete(NULL);
-}
-
-int64_t battery_ping_end(alarm_id_t id, __unused void *params)
-{
-    gpio_put(Config::GPIO::BATTERY_PING_PIN, true);
-    return 0;
-}
-
-void init()
-{
-    Config::init_timers();
-    Temperature::init();
-
-    gpio_init(Config::GPIO::SETUP_BTN);
-    gpio_set_dir(Config::GPIO::SETUP_BTN, GPIO_IN);
-    gpio_pull_up(Config::GPIO::SETUP_BTN);
-
-    gpio_init(Config::GPIO::BATTERY_PING_PIN);
-    gpio_set_dir(Config::GPIO::BATTERY_PING_PIN, true);
-    gpio_put(Config::GPIO::BATTERY_PING_PIN, true);
-
-    repeating_timer_t batteryPingTimer;
-    add_repeating_timer_ms(-1000, [](repeating_timer_t *rt) -> bool
-                           { gpio_put(Config::GPIO::BATTERY_PING_PIN, false); add_alarm_in_ms(100, battery_ping_end, NULL, true); return true; }, NULL, &batteryPingTimer);
-}
-
-void deinit()
-{
-    Temperature::deinit();
-    Config::deinit_timers();
 }
 
 int main()
@@ -119,7 +93,8 @@ int main()
     stdio_init_all();
     sleep_us(64);
 
-    init();
+    Config::init_timers();
+    Temperature::init();
 
     printf("[BOOT] Creating MainThread task\n");
     TaskHandle_t task;
@@ -128,7 +103,8 @@ int main()
     printf("[BOOT] Starting task scheduler\n");
     vTaskStartScheduler();
 
-    deinit();
+    Temperature::deinit();
+    Config::deinit_timers();
     return 0;
 }
 

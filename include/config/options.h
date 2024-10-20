@@ -15,7 +15,10 @@ namespace Config
     namespace GPIO
     {
         static constexpr uint SETUP_BTN = 7;
-        static constexpr uint BATTERY_PING_PIN = 8;
+
+        // gpio_init(Config::GPIO::SETUP_BTN);
+        // gpio_set_dir(Config::GPIO::SETUP_BTN, GPIO_IN);
+        // gpio_pull_up(Config::GPIO::SETUP_BTN);
     }
 
     namespace Network
@@ -66,6 +69,12 @@ namespace Config
 
         static constexpr uint BLINK_LENGTH = 1000000;
         static constexpr uint BLINK_ON_LENGTH = 250000;
+    }
+
+    namespace Battery
+    {
+        static constexpr uint PING_PIN = 8;
+        static constexpr int32_t PING_TIMER_DELAY_MS = -1000;
     }
 }
 

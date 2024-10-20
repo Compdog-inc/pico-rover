@@ -48,6 +48,7 @@ add_executable(rover
         # subsystems
         src/subsystems/drivetrain.cpp
         src/subsystems/lights.cpp
+        src/subsystems/battery.cpp
         )
 
 # Include headers
