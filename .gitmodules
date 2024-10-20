@@ -1,0 +1,9 @@
+[submodule "pico-motor"]
+	path = pico-motor
+	url = https://github.com/Compdog-inc/pico-motor
+[submodule "pico-radio"]
+	path = pico-radio
+	url = https://github.com/Compdog-inc/pico-radio
+[submodule "pico-robot"]
+	path = pico-robot
+	url = https://github.com/Compdog-inc/pico-robot
