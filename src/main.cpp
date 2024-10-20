@@ -39,6 +39,7 @@ static void main_task(__unused void *params)
     drivetrain = new Drivetrain();
     lights = new Lights();
     battery = new Battery();
+    battery->startPingTimer();
 
     // Create wifi radio
     Radio *radio = new Radio();
