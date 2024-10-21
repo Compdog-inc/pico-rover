@@ -16,6 +16,7 @@ DifferentialModule::DifferentialModule(const ModuleConfig &config) : motorFront(
                                                                      motorBack(new Motor(config.backPinCW, config.backPinCCW)),
                                                                      wheelDiameter(config.wheelDiameter)
 {
+    stop();
 }
 
 void DifferentialModule::setDesiredState(Units<float> speed)
@@ -36,6 +37,7 @@ Drivetrain::Drivetrain() : kinematics(new DifferentialDriveKinematics(Config::Dr
                            left(new DifferentialModule(Config::Drivetrain::LEFT_CONSTANTS)),
                            right(new DifferentialModule(Config::Drivetrain::RIGHT_CONSTANTS))
 {
+    stop();
 }
 
 void Drivetrain::drive(Units<float> speed, Units<float> rotation)
