@@ -7,7 +7,7 @@
 #include "control/udpxbox.h"
 #include "config/options.h"
 
-UDPXbox::UDPXbox() : socket(new UdpSocket(Config::Control::XBOX_UDP_PORT))
+UDPXbox::UDPXbox() : inputs({}), socket(new UdpSocket(Config::Control::XBOX_UDP_PORT))
 {
     socket->callbackArgs = this;
     socket->receiveCallback = [](UdpSocket *socket, Datagram *datagram, void *args)
