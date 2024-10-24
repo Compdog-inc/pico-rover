@@ -58,7 +58,14 @@ static void main_task(__unused void *params)
     while (true)
     {
         vTaskDelay(pdMS_TO_TICKS(20));
-        drivetrain->drive(xbox->getForward(), xbox->getRotation());
+        if (xbox->isConnected())
+        {
+            drivetrain->drive(xbox->getForward(), xbox->getRotation());
+        }
+        else
+        {
+            drivetrain->stop();
+        }
     }
 
     xbox->~UDPXbox();

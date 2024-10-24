@@ -14,7 +14,12 @@ public:
     Units<float> getForward();
     Units<float> getRotation();
 
+    bool isConnected();
+
     Control::Xbox inputs;
+    absolute_time_t lastInputPacketTime;
+
+    static constexpr int64_t MAX_PACKET_INTERVAL_US = 100 /* ms */ * 1000 /* ms to us */;
 
 private:
     UdpSocket *socket;
