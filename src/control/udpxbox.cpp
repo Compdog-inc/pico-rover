@@ -16,8 +16,10 @@ UDPXbox::UDPXbox() : inputs({}), lastInputPacketTime(0), socket(new UdpSocket(Co
     socket->receiveCallback = [](UdpSocket *socket, Datagram *datagram, void *args)
     {
         UDPXbox *xbox = (UDPXbox *)args;
-        xbox->inputs.deserialize((uint8_t *)datagram->data, datagram->length);
-        xbox->lastInputPacketTime = get_absolute_time();
+        if (xbox->inputs.deserialize((uint8_t *)datagram->data, datagram->length) > 0)
+        {
+            xbox->lastInputPacketTime = get_absolute_time();
+        }
     };
 }
 
