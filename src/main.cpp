@@ -38,12 +38,6 @@ static Battery *battery;
 
 static void main_task(__unused void *params)
 {
-    // Initialize and create subsystems
-    drivetrain = new Drivetrain();
-    lights = new Lights();
-    battery = new Battery();
-    battery->startPingTimer();
-
     // Create wifi radio
     Radio *radio = new Radio();
     if (!radio->isInitialized())
@@ -53,6 +47,14 @@ static void main_task(__unused void *params)
         return;
     }
 
+    // Initialize and create subsystems
+    drivetrain = new Drivetrain();
+    lights = new Lights();
+    battery = new Battery();
+    battery->startPingTimer();
+
+    lights->setRingIndicatorPattern(Pattern::Alt1, Pattern::Alt2);
+
     UDPXbox *xbox = new UDPXbox();
 
     while (true)
@@ -61,10 +63,12 @@ static void main_task(__unused void *params)
         if (xbox->isConnected())
         {
             drivetrain->drive(xbox->getForward(), xbox->getRotation());
+            lights->setStatusLedPattern(Pattern::Blink);
         }
         else
         {
             drivetrain->stop();
+            lights->setStatusLedPattern(Pattern::On);
         }
     }
 

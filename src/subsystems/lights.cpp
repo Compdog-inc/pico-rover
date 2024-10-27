@@ -10,15 +10,30 @@
 #include <pico/stdlib.h>
 #include <hardware/pwm.h>
 
+// Libraries
+#include <board/led.h>
+
 // Config headers
 #include "config/options.h"
 
 #include "subsystems/lights.h"
 
+enum SPECIAL_GPIO
+{
+    STATUS_LED_GPIO = 255
+};
+
 void pwm_set_squared(uint gpio, uint16_t level)
 {
-    uint16_t squared = (level >> 8) * (level >> 8);
-    pwm_set_gpio_level(gpio, squared);
+    uint16_t squared = ((level >> 8) + 1) * ((level >> 8) + 1) - 1;
+    if (gpio != STATUS_LED_GPIO)
+    {
+        pwm_set_gpio_level(gpio, squared);
+    }
+    else
+    {
+        BoardLed::set(level);
+    }
 }
 
 void apply_pattern(uint gpio, Pattern pattern)
@@ -82,6 +97,7 @@ void animation_task(void *pv_lights)
     {
         apply_pattern(lights->getLeftRingIndicatorPin(), lights->getLeftRingIndicatorPattern());
         apply_pattern(lights->getRightRingIndicatorPin(), lights->getRightRingIndicatorPattern());
+        apply_pattern(STATUS_LED_GPIO, lights->getStatusLedPattern());
         vTaskDelay(pdMS_TO_TICKS(2));
     }
 
@@ -107,6 +123,8 @@ Lights::Lights() : animationRunning(true), leftRingIndicatorPin(Config::Lights::
     pwm_init(slice_num_left, &config, true);
     pwm_init(slice_num_right, &config, true);
 
+    BoardLed::init();
+
     xTaskCreate(animation_task, "LightAnimationThread", configMINIMAL_STACK_SIZE, this, (tskIDLE_PRIORITY + 2UL), &animationTask);
 }
 
@@ -119,4 +137,9 @@ void Lights::setRingIndicatorPattern(Pattern left, Pattern right)
 {
     leftRingIndicatorPattern = left;
     rightRingIndicatorPattern = right;
+}
+
+void Lights::setStatusLedPattern(Pattern pattern)
+{
+    statusLedPattern = pattern;
 }

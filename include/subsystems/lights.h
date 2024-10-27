@@ -23,6 +23,7 @@ public:
     ~Lights();
 
     void setRingIndicatorPattern(Pattern left, Pattern right);
+    void setStatusLedPattern(Pattern pattern);
 
     Pattern getLeftRingIndicatorPattern()
     {
@@ -31,6 +32,11 @@ public:
     Pattern getRightRingIndicatorPattern()
     {
         return rightRingIndicatorPattern;
+    }
+
+    Pattern getStatusLedPattern()
+    {
+        return statusLedPattern;
     }
 
     bool isAnimationRunning()
@@ -56,6 +62,8 @@ private:
 
     Pattern leftRingIndicatorPattern;
     Pattern rightRingIndicatorPattern;
+
+    Pattern statusLedPattern;
 };
 
 #endif
