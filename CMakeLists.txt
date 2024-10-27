@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.30)
 # Initialize SDK config
 set(PICO_BOARD pico_w)
 set(PICO_PLATFORM rp2040)
-set(PICO_DEOPTIMIZED_DEBUG 1)
 
 # Initialize pico-radio config
 
@@ -25,7 +24,7 @@ set(CMAKE_CXX_STANDARD 20)      # C++20
 # Implement custom panic callback
 add_compile_definitions(PICO_PANIC_FUNCTION=rtos_panic)
 # Set debug level
-add_compile_definitions(DEBUG_LEVEL=2)
+add_compile_definitions(DEBUG_LEVEL=0)
 
 # Verify pico SDK version
 if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
