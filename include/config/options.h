@@ -4,6 +4,7 @@
 // Standard headers
 #include <stdlib.h>
 #include <stdint.h>
+#include <string>
 
 // Hardware headers
 #include <pico/stdlib.h>
@@ -29,6 +30,11 @@ namespace Config
 
     namespace Control
     {
+        using namespace std::literals;
+        static constexpr int DRIVERSTATION_PORT = 5002;
+        static constexpr std::string_view DRIVERSTATION_PROTOCOL = "driverstation.pico.rover"sv;
+        static constexpr uint32_t DRIVERSTATION_TIMEOUT_MS = 1000;
+
         static constexpr int XBOX_UDP_PORT = 5001;
     }
 

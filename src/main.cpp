@@ -29,6 +29,7 @@
 
 // Control
 #include "control/udpxbox.h"
+#include "control/driverstation.h"
 
 using namespace std::literals;
 
@@ -55,6 +56,7 @@ static void main_task(__unused void *params)
 
     lights->setRingIndicatorPattern(Pattern::Alt1, Pattern::Alt2);
 
+    Driverstation *driverstation = new Driverstation();
     UDPXbox *xbox = new UDPXbox();
 
     while (true)
@@ -73,6 +75,7 @@ static void main_task(__unused void *params)
     }
 
     xbox->~UDPXbox();
+    driverstation->~Driverstation();
 
     // Deinitialize subsystems
     radio->deinit();
