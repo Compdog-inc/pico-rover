@@ -141,7 +141,11 @@
 			"xlocmes": "cpp",
 			"xlocmon": "cpp",
 			"xlocnum": "cpp",
-			"xloctime": "cpp"
+			"xloctime": "cpp",
+			"queue": "cpp",
+			"xhash": "cpp",
+			"ios": "cpp",
+			"xtree": "cpp"
 		},
 		"cmake.statusbar.advanced": {
 			"debug": {

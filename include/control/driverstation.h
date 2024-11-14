@@ -6,6 +6,35 @@
 #include <pico/stdlib.h>
 #include <pico/time.h>
 
+enum class PacketType : uint8_t
+{
+    ClockSync,
+    RobotProperties
+};
+
+struct ClockSyncRequestPacket
+{
+    uint64_t clientTime;
+
+    template <class T>
+    void pack(T &pack)
+    {
+        pack(clientTime);
+    }
+};
+
+struct ClockSyncPacket
+{
+    uint64_t clientTime;
+    uint64_t serverTime;
+
+    template <class T>
+    void pack(T &pack) const
+    {
+        pack(clientTime, serverTime);
+    }
+};
+
 class Driverstation
 {
 public:

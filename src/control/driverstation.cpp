@@ -13,34 +13,6 @@
 
 #include <msgpack/msgpack.hpp>
 
-enum class PacketType : uint8_t
-{
-    ClockSync
-};
-
-struct ClockSyncRequestPacket
-{
-    uint64_t clientTime;
-
-    template <class T>
-    void pack(T &pack)
-    {
-        pack(clientTime);
-    }
-};
-
-struct ClockSyncPacket
-{
-    uint64_t clientTime;
-    uint64_t serverTime;
-
-    template <class T>
-    void pack(T &pack)
-    {
-        pack(clientTime, serverTime);
-    }
-};
-
 using namespace std::literals;
 
 int64_t TimeoutAlarmCallback(alarm_id_t id, void *user_data)
@@ -166,6 +138,13 @@ void Driverstation::handleFrame(const Guid &guid, const WebSocketFrame &frame)
 
             auto data = msgpack::pack(response);
             data.emplace(data.begin(), (uint8_t)PacketType::ClockSync);
+            server->send(guid, data);
+            break;
+        }
+        case PacketType::RobotProperties:
+        {
+            auto data = msgpack::pack(Config::ROBOT_PROPERTIES);
+            data.emplace(data.begin(), (uint8_t)PacketType::RobotProperties);
             server->send(guid, data);
             break;
         }
