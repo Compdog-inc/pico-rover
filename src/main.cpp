@@ -18,7 +18,7 @@
 
 // Libraries
 #include <radio.h>
-#include <udpsocket.h>
+#include <nt/ntinstance.h>
 #include <math/units.h>
 #include <board/temperature.h>
 
@@ -44,9 +44,13 @@ static void main_task(__unused void *params)
     if (!radio->isInitialized())
     {
         printf("Error initializing radio\n");
+        delete radio;
         vTaskDelete(NULL);
         return;
     }
+
+    NetworkTableInstance *networkTable = new NetworkTableInstance();
+    networkTable->startServer();
 
     // Initialize and create subsystems
     drivetrain = new Drivetrain();
@@ -74,15 +78,17 @@ static void main_task(__unused void *params)
         }
     }
 
-    xbox->~UDPXbox();
-    driverstation->~Driverstation();
+    delete xbox;
+    delete driverstation;
 
     // Deinitialize subsystems
+    networkTable->close();
+    delete networkTable;
     radio->deinit();
-    radio->~Radio();
+    delete radio;
     delete drivetrain;
-    lights->~Lights();
-    battery->~Battery();
+    delete lights;
+    delete battery;
 
     vTaskDelete(NULL);
 }

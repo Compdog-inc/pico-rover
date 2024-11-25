@@ -106,7 +106,7 @@ Driverstation::Driverstation() : clients({}), server(new WsServer(Config::Contro
 
 Driverstation::~Driverstation()
 {
-    server->~WsServer();
+    delete server;
 }
 
 void Driverstation::ping(const Guid &guid)

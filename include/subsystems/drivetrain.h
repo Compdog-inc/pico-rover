@@ -10,6 +10,7 @@ class DifferentialModule
 {
 public:
     DifferentialModule(const ModuleConfig &config);
+    ~DifferentialModule();
 
     void setDesiredState(Units<float> speed);
     void stop();
@@ -26,6 +27,8 @@ class Drivetrain
 {
 public:
     Drivetrain();
+    ~Drivetrain();
+
     void drive(Units<float> speed, Units<float> rotation);
     void stop();
 

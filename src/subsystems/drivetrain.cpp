@@ -19,6 +19,14 @@ DifferentialModule::DifferentialModule(const ModuleConfig &config) : motorFront(
     stop();
 }
 
+DifferentialModule::~DifferentialModule()
+{
+    stop();
+    delete motorFront;
+    delete motorCenter;
+    delete motorBack;
+}
+
 void DifferentialModule::setDesiredState(Units<float> speed)
 {
     motorFront->set(speed.meters());
@@ -38,6 +46,14 @@ Drivetrain::Drivetrain() : kinematics(new DifferentialDriveKinematics(Config::Dr
                            right(new DifferentialModule(Config::Drivetrain::RIGHT_CONSTANTS))
 {
     stop();
+}
+
+Drivetrain::~Drivetrain()
+{
+    stop();
+    delete kinematics;
+    delete left;
+    delete right;
 }
 
 void Drivetrain::drive(Units<float> speed, Units<float> rotation)

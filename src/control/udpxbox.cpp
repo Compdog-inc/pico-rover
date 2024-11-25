@@ -26,7 +26,7 @@ UDPXbox::UDPXbox() : inputs({}), lastInputPacketTime(0), socket(new UdpSocket(Co
 UDPXbox::~UDPXbox()
 {
     socket->deinit();
-    socket->~UdpSocket();
+    delete socket;
 }
 
 Units<float> UDPXbox::getForward()
