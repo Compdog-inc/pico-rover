@@ -63,9 +63,10 @@ static void main_task(__unused void *params)
     Driverstation *driverstation = new Driverstation();
     UDPXbox *xbox = new UDPXbox();
 
+    int64_t index = 5;
     while (true)
     {
-        vTaskDelay(pdMS_TO_TICKS(20));
+        vTaskDelay(pdMS_TO_TICKS(2000));
         if (xbox->isConnected())
         {
             drivetrain->drive(xbox->getForward(), xbox->getRotation());
@@ -76,6 +77,8 @@ static void main_task(__unused void *params)
             drivetrain->stop();
             lights->setStatusLedPattern(Pattern::On);
         }
+
+        networkTable->setTestValue(index++);
     }
 
     delete xbox;
