@@ -19,7 +19,7 @@ include("pico-robot/import.cmake")
 
 project(rover C CXX ASM)
 set(CMAKE_C_STANDARD 17)        # C17
-set(CMAKE_CXX_STANDARD 20)      # C++20
+set(CMAKE_CXX_STANDARD 23)      # C++23
 
 # Implement custom panic callback
 add_compile_definitions(PICO_PANIC_FUNCTION=rtos_panic)
