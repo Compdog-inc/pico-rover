@@ -20,6 +20,7 @@
 #include <radio.h>
 #include <nt/ntinstance.h>
 #include <math/units.h>
+#include <math/random.h>
 #include <board/temperature.h>
 
 // Subsystems
@@ -63,10 +64,9 @@ static void main_task(__unused void *params)
     Driverstation *driverstation = new Driverstation();
     UDPXbox *xbox = new UDPXbox();
 
-    int64_t index = 5;
     while (true)
     {
-        vTaskDelay(pdMS_TO_TICKS(300));
+        vTaskDelay(pdMS_TO_TICKS(20));
         if (xbox->isConnected())
         {
             drivetrain->drive(xbox->getForward(), xbox->getRotation());
@@ -78,7 +78,7 @@ static void main_task(__unused void *params)
             lights->setStatusLedPattern(Pattern::On);
         }
 
-        networkTable->setTestValue(index++);
+        networkTable->setTestValue(networkTable->getTestValue() + std::cos(networkTable->getTestValue() + 20 * Random::rand_float()));
     }
 
     delete xbox;
