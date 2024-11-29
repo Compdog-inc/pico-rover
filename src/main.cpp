@@ -66,7 +66,7 @@ static void main_task(__unused void *params)
     int64_t index = 5;
     while (true)
     {
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(300));
         if (xbox->isConnected())
         {
             drivetrain->drive(xbox->getForward(), xbox->getRotation());
