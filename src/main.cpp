@@ -64,6 +64,8 @@ static void main_task(__unused void *params)
     Driverstation *driverstation = new Driverstation();
     UDPXbox *xbox = new UDPXbox();
 
+    int64_t diff = 0;
+
     while (true)
     {
         vTaskDelay(pdMS_TO_TICKS(20));
@@ -78,7 +80,9 @@ static void main_task(__unused void *params)
             lights->setStatusLedPattern(Pattern::On);
         }
 
-        networkTable->setTestValue(networkTable->getTestValue() + std::cos(networkTable->getTestValue() + 20 * Random::rand_float()));
+        auto start = get_absolute_time();
+        networkTable->setTestValue(diff);
+        diff = absolute_time_diff_us(start, get_absolute_time());
     }
 
     delete xbox;
