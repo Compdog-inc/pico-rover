@@ -66,6 +66,8 @@ static void main_task(__unused void *params)
 
     int64_t diff = 0;
 
+    auto topic = networkTable->publish("/SmartDashboard/testvalue"s, 0, NTDataType::Int, {.retained = true, .cached = true});
+
     while (true)
     {
         vTaskDelay(pdMS_TO_TICKS(20));
@@ -81,7 +83,7 @@ static void main_task(__unused void *params)
         }
 
         auto start = get_absolute_time();
-        networkTable->setTestValue(diff);
+        networkTable->updateTopic(topic.id, {diff});
         diff = absolute_time_diff_us(start, get_absolute_time());
     }
 
