@@ -64,9 +64,14 @@ static void main_task(__unused void *params)
     Driverstation *driverstation = new Driverstation();
     UDPXbox *xbox = new UDPXbox();
 
-    int64_t diff = 0;
+    int64_t testvalue = 0;
 
-    auto topic = networkTable->publish("/SmartDashboard/testvalue"s, 0, NTDataType::Int, {.retained = true, .cached = true});
+    auto topic = networkTable->publish(
+        "/SmartDashboard/testvalue"s,
+        0,
+        NTDataType::Int,
+        {.retained = true,
+         .cached = true});
 
     while (true)
     {
@@ -83,8 +88,13 @@ static void main_task(__unused void *params)
         }
 
         auto start = get_absolute_time();
-        networkTable->updateTopic(topic.id, {diff});
-        diff = absolute_time_diff_us(start, get_absolute_time());
+
+        networkTable->updateTopic(
+            topic.id,
+            {testvalue});
+        networkTable->flush();
+
+        testvalue = absolute_time_diff_us(start, get_absolute_time());
     }
 
     delete xbox;
