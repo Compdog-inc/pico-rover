@@ -19,6 +19,7 @@
 // Libraries
 #include <radio.h>
 #include <nt/ntinstance.h>
+#include <nt/ntentry.h>
 #include <math/units.h>
 #include <math/random.h>
 #include <board/temperature.h>
@@ -50,8 +51,8 @@ static void main_task(__unused void *params)
         return;
     }
 
-    NetworkTableInstance *networkTable = new NetworkTableInstance();
-    networkTable->startServer();
+    NetworkTableInstance *nt = new NetworkTableInstance();
+    nt->startServer();
 
     // Initialize and create subsystems
     drivetrain = new Drivetrain();
@@ -63,15 +64,6 @@ static void main_task(__unused void *params)
 
     Driverstation *driverstation = new Driverstation();
     UDPXbox *xbox = new UDPXbox();
-
-    int64_t testvalue = 0;
-
-    auto topic = networkTable->publish(
-        "/SmartDashboard/testvalue"s,
-        0,
-        NTDataType::Int,
-        {.retained = true,
-         .cached = true});
 
     while (true)
     {
@@ -87,22 +79,15 @@ static void main_task(__unused void *params)
             lights->setStatusLedPattern(Pattern::On);
         }
 
-        auto start = get_absolute_time();
-
-        networkTable->updateTopic(
-            topic.id,
-            {testvalue});
-        networkTable->flush();
-
-        testvalue = absolute_time_diff_us(start, get_absolute_time());
+        nt->flush();
     }
 
     delete xbox;
     delete driverstation;
 
     // Deinitialize subsystems
-    networkTable->close();
-    delete networkTable;
+    nt->close();
+    delete nt;
     radio->deinit();
     delete radio;
     delete drivetrain;
