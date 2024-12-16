@@ -45,6 +45,7 @@ add_compile_options(-Wall
 add_executable(rover
         # entry point
         src/main.cpp
+        src/communication.cpp
         # subsystems
         src/subsystems/drivetrain.cpp
         src/subsystems/lights.cpp
@@ -68,6 +69,7 @@ target_link_libraries(rover
         FreeRTOS-Kernel-Heap4                   # FreeRTOS kernel and dynamic heap
         # Hardware libraries
         hardware_pwm
+        hardware_spi
         # Libraries
         pico-motor
         pico-radio

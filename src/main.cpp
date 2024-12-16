@@ -33,6 +33,8 @@
 #include "control/udpxbox.h"
 #include "control/driverstation.h"
 
+#include "communication.h"
+
 using namespace std::literals;
 
 static Drivetrain *drivetrain;
@@ -65,6 +67,8 @@ static void main_task(__unused void *params)
     Driverstation *driverstation = new Driverstation();
     UDPXbox *xbox = new UDPXbox();
 
+    Communication *comm = new Communication(true);
+
     while (true)
     {
         vTaskDelay(pdMS_TO_TICKS(20));
@@ -79,8 +83,20 @@ static void main_task(__unused void *params)
             lights->setStatusLedPattern(Pattern::On);
         }
 
+        CommunicationStatus status;
+        if (!comm->readStatus(&status))
+        {
+            printf("Error reading status\n");
+        }
+        else
+        {
+            printf("Status: %#010x, %u\n", status.version, status.running ? 0xFF : 0x00);
+        }
+
         nt->flush();
     }
+
+    delete comm;
 
     delete xbox;
     delete driverstation;
