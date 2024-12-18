@@ -69,6 +69,9 @@ static void main_task(__unused void *params)
 
     Communication *comm = new Communication(true);
 
+    NTEntry distances = NTEntry(nt, "SmartDashboard/Distance", NTDataValue(std::vector<float>{0, 0, 0, 0, 0, 0}));
+
+    absolute_time_t lastFlush = get_absolute_time();
     while (true)
     {
         vTaskDelay(pdMS_TO_TICKS(20));
@@ -91,12 +94,20 @@ static void main_task(__unused void *params)
         {
             printf("[COMM] Error reading data\n");
         }
+        else if (status.version != 0xBADC0DE5 || !status.running)
+        {
+            printf("[COMM] Invalid status %#010x, %#04x\n", status.version, status.running ? 0xFF : 0x00);
+        }
         else
         {
-            printf("Status: %#010x, %u\n", status.version, status.running ? 0xFF : 0x00);
+            distances.set(NTDataValue(std::vector<float>{sensors.distance0, sensors.distance1, sensors.distance2, sensors.distance3, sensors.distance4, sensors.distance5}));
         }
 
-        nt->flush();
+        if (absolute_time_diff_us(lastFlush, get_absolute_time()) > 100 * 1000)
+        {
+            lastFlush = get_absolute_time();
+            nt->flush();
+        }
     }
 
     delete comm;
