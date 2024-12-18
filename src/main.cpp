@@ -83,10 +83,13 @@ static void main_task(__unused void *params)
             lights->setStatusLedPattern(Pattern::On);
         }
 
-        CommunicationStatus status;
-        if (!comm->readStatus(&status))
+        CommunicationControl control{};
+
+        CommunicationStatus status{};
+        CommunicationDistanceSensors sensors{};
+        if (!comm->read(control, &status, &sensors))
         {
-            printf("Error reading status\n");
+            printf("[COMM] Error reading data\n");
         }
         else
         {

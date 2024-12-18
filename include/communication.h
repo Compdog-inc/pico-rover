@@ -3,13 +3,6 @@
 
 #include <pico/stdlib.h>
 
-enum class CommunicationCommand : uint8_t
-{
-    Null = 0x00,
-    ReadStatus = 0x01,
-    ReadDistanceSensors = 0x02
-};
-
 struct CommunicationStatus
 {
     uint32_t version;
@@ -30,20 +23,29 @@ struct CommunicationDistanceSensors
 
 static constexpr uint CommunicationDistanceSensors_SIZE = 4 * 6;
 
+static constexpr uint Communication_DataSize = CommunicationStatus_SIZE + CommunicationDistanceSensors_SIZE;
+
+enum class CommunicationCommand : uint8_t
+{
+    Null = 0x00,
+    Debug = 0x01
+};
+
+struct CommunicationControl
+{
+    CommunicationCommand command;             // first byte is command
+    uint8_t data[Communication_DataSize - 1]; // rest is host data
+};
+
 class Communication
 {
 public:
     Communication(bool isMain);
     ~Communication();
 
-    bool readStatus(CommunicationStatus *out_status);
-    bool readDistanceSensors(CommunicationDistanceSensors *out_sensors);
-
     bool hasData();
-    CommunicationCommand getCommand();
-
-    bool writeStatus(const CommunicationStatus &status);
-    bool writeDistanceSensors(const CommunicationDistanceSensors &sensors);
+    bool read(const CommunicationControl &control, CommunicationStatus *out_status, CommunicationDistanceSensors *out_sensors);
+    bool write(const CommunicationStatus &status, const CommunicationDistanceSensors &sensors, CommunicationControl *out_control);
 
 private:
     bool isMain;

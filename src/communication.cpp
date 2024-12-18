@@ -34,78 +34,66 @@ Communication::~Communication()
     gpio_deinit(COMM_SPI_CSN);
 }
 
-bool Communication::readStatus(CommunicationStatus *out_status)
-{
-    uint8_t buffer[CommunicationStatus_SIZE + 1];
-    if (spi_read_blocking(spi0, (uint8_t)CommunicationCommand::ReadStatus, buffer, CommunicationStatus_SIZE + 1) != CommunicationStatus_SIZE + 1)
-    {
-        return false;
-    }
-
-    *out_status = {
-        .version = ((uint32_t)buffer[1]) | ((uint32_t)buffer[2] << 8) | ((uint32_t)buffer[3] << 16) | ((uint32_t)buffer[4] << 24),
-        .running = buffer[5] != 0};
-
-    return true;
-}
-
-bool Communication::readDistanceSensors(CommunicationDistanceSensors *out_sensors)
-{
-    uint8_t buffer[CommunicationDistanceSensors_SIZE + 1];
-    if (spi_read_blocking(spi0, (uint8_t)CommunicationCommand::ReadDistanceSensors, buffer, CommunicationDistanceSensors_SIZE + 1) != CommunicationDistanceSensors_SIZE + 1)
-    {
-        return false;
-    }
-
-    *out_sensors = {};
-
-    std::memcpy(&out_sensors->distance0, &buffer[1 + 0 * sizeof(float)], sizeof(float));
-    std::memcpy(&out_sensors->distance1, &buffer[1 + 1 * sizeof(float)], sizeof(float));
-    std::memcpy(&out_sensors->distance2, &buffer[1 + 2 * sizeof(float)], sizeof(float));
-    std::memcpy(&out_sensors->distance3, &buffer[1 + 3 * sizeof(float)], sizeof(float));
-    std::memcpy(&out_sensors->distance4, &buffer[1 + 4 * sizeof(float)], sizeof(float));
-    std::memcpy(&out_sensors->distance5, &buffer[1 + 5 * sizeof(float)], sizeof(float));
-
-    return true;
-}
-
 bool Communication::hasData()
 {
     return spi_is_readable(spi0);
 }
 
-CommunicationCommand Communication::getCommand()
+bool Communication::read(const CommunicationControl &control, CommunicationStatus *out_status, CommunicationDistanceSensors *out_sensors)
 {
-    uint8_t buffer[1];
-    if (spi_read_blocking(spi0, 0, buffer, 1) != 1)
+    uint8_t controlBuf[Communication_DataSize];
+
+    controlBuf[0] = (uint8_t)control.command;
+    std::memcpy(&controlBuf[1], control.data, Communication_DataSize - 1);
+
+    uint8_t buffer[Communication_DataSize];
+    if (spi_write_read_blocking(spi0, controlBuf, buffer, Communication_DataSize) != Communication_DataSize)
     {
-        return CommunicationCommand::Null;
+        return false;
     }
 
-    return (CommunicationCommand)buffer[0];
+    *out_status = {
+        .version = ((uint32_t)buffer[0]) | ((uint32_t)buffer[1] << 8) | ((uint32_t)buffer[2] << 16) | ((uint32_t)buffer[3] << 24),
+        .running = buffer[4] != 0};
+
+    *out_sensors = {};
+
+    std::memcpy(&out_sensors->distance0, &buffer[5 + 0 * sizeof(float)], sizeof(float));
+    std::memcpy(&out_sensors->distance1, &buffer[5 + 1 * sizeof(float)], sizeof(float));
+    std::memcpy(&out_sensors->distance2, &buffer[5 + 2 * sizeof(float)], sizeof(float));
+    std::memcpy(&out_sensors->distance3, &buffer[5 + 3 * sizeof(float)], sizeof(float));
+    std::memcpy(&out_sensors->distance4, &buffer[5 + 4 * sizeof(float)], sizeof(float));
+    std::memcpy(&out_sensors->distance5, &buffer[5 + 5 * sizeof(float)], sizeof(float));
+
+    return true;
 }
 
-bool Communication::writeStatus(const CommunicationStatus &status)
+bool Communication::write(const CommunicationStatus &status, const CommunicationDistanceSensors &sensors, CommunicationControl *out_control)
 {
-    uint8_t buffer[CommunicationStatus_SIZE];
+    uint8_t buffer[Communication_DataSize];
     buffer[0] = (uint8_t)(status.version & 0xFF);
     buffer[1] = (uint8_t)((status.version >> 8) & 0xFF);
     buffer[2] = (uint8_t)((status.version >> 16) & 0xFF);
     buffer[3] = (uint8_t)((status.version >> 24) & 0xFF);
     buffer[4] = status.running ? 0xFF : 0;
 
-    return spi_write_blocking(spi0, buffer, CommunicationStatus_SIZE) == CommunicationStatus_SIZE;
-}
+    std::memcpy(&buffer[5 + 0 * sizeof(float)], &sensors.distance0, sizeof(float));
+    std::memcpy(&buffer[5 + 1 * sizeof(float)], &sensors.distance1, sizeof(float));
+    std::memcpy(&buffer[5 + 2 * sizeof(float)], &sensors.distance2, sizeof(float));
+    std::memcpy(&buffer[5 + 3 * sizeof(float)], &sensors.distance3, sizeof(float));
+    std::memcpy(&buffer[5 + 4 * sizeof(float)], &sensors.distance4, sizeof(float));
+    std::memcpy(&buffer[5 + 5 * sizeof(float)], &sensors.distance5, sizeof(float));
 
-bool Communication::writeDistanceSensors(const CommunicationDistanceSensors &sensors)
-{
-    uint8_t buffer[CommunicationDistanceSensors_SIZE];
-    std::memcpy(&buffer[0 + 0 * sizeof(float)], &sensors.distance0, sizeof(float));
-    std::memcpy(&buffer[0 + 1 * sizeof(float)], &sensors.distance1, sizeof(float));
-    std::memcpy(&buffer[0 + 2 * sizeof(float)], &sensors.distance2, sizeof(float));
-    std::memcpy(&buffer[0 + 3 * sizeof(float)], &sensors.distance3, sizeof(float));
-    std::memcpy(&buffer[0 + 4 * sizeof(float)], &sensors.distance4, sizeof(float));
-    std::memcpy(&buffer[0 + 5 * sizeof(float)], &sensors.distance5, sizeof(float));
+    uint8_t controlBuf[Communication_DataSize];
 
-    return spi_write_blocking(spi0, buffer, CommunicationDistanceSensors_SIZE) == CommunicationDistanceSensors_SIZE;
+    if (spi_write_read_blocking(spi0, buffer, controlBuf, Communication_DataSize) != Communication_DataSize)
+    {
+        return false;
+    }
+
+    *out_control = {};
+    out_control->command = (CommunicationCommand)controlBuf[0];
+    std::memcpy(out_control->data, &controlBuf[1], Communication_DataSize - 1);
+
+    return true;
 }
