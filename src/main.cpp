@@ -15,6 +15,7 @@
 // Hardware headers
 #include <pico/stdlib.h>
 #include <pico/time.h>
+#include <hardware/clocks.h>
 
 // Libraries
 #include <radio.h>
@@ -43,12 +44,20 @@ static Battery *battery;
 
 static void main_task(__unused void *params)
 {
+    battery = new Battery();
+    battery->startPingTimer();
+
+    lights = new Lights();
+    lights->setRingIndicatorPattern(Pattern::Pulse, Pattern::Pulse);
+
     // Create wifi radio
     Radio *radio = new Radio();
     if (!radio->isInitialized())
     {
         printf("Error initializing radio\n");
         delete radio;
+        delete lights;
+        delete battery;
         vTaskDelete(NULL);
         return;
     }
@@ -58,9 +67,6 @@ static void main_task(__unused void *params)
 
     // Initialize and create subsystems
     drivetrain = new Drivetrain();
-    lights = new Lights();
-    battery = new Battery();
-    battery->startPingTimer();
 
     lights->setRingIndicatorPattern(Pattern::Alt1, Pattern::Alt2);
 
@@ -134,6 +140,20 @@ int main()
 
     Config::init_timers();
     Temperature::init();
+
+#ifdef FREQUENCY_DEBUG
+    double freq;
+    int msg_count;
+    msg_count = 1;
+
+    while (true)
+    {
+        freq = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS); // Frequency counter
+        printf("RP2040_SYS_CLK_MHz:%.3f:MSG_COUNT:%i:\n\r", freq / 1000, msg_count);
+        msg_count += 1;
+        sleep_ms(500);
+    }
+#endif
 
     printf("[BOOT] Creating MainThread task\n");
     TaskHandle_t task;

@@ -145,7 +145,24 @@
 			"queue": "cpp",
 			"xhash": "cpp",
 			"ios": "cpp",
-			"xtree": "cpp"
+			"xtree": "cpp",
+			"complex": "cpp",
+			"mutex": "cpp",
+			"text_encoding": "cpp",
+			"thread": "cpp",
+			"cfenv": "cpp",
+			"coroutine": "cpp",
+			"expected": "cpp",
+			"resumable": "cpp",
+			"filesystem": "cpp",
+			"future": "cpp",
+			"shared_mutex": "cpp",
+			"source_location": "cpp",
+			"stack": "cpp",
+			"stop_token": "cpp",
+			"typeindex": "cpp",
+			"unordered_set": "cpp",
+			"*.in": "cpp"
 		},
 		"cmake.statusbar.advanced": {
 			"debug": {

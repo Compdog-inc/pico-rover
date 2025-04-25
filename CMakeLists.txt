@@ -7,7 +7,8 @@ set(PICO_PLATFORM rp2040)
 # Initialize pico-radio config
 
 set(PICO_RADIO_HOSTNAME "Rover")
-set(PICO_RADIO_AP true)
+set(PICO_RADIO_STATIC_IP true)
+set(PICO_RADIO_RETRY_COUNT -1)
 set(PICO_RADIO_SSID "RobotWifi")
 
 # Include SDK, kernel, and libraries (must be before project)
@@ -25,10 +26,12 @@ set(CMAKE_CXX_STANDARD 23)      # C++23
 add_compile_definitions(PICO_PANIC_FUNCTION=rtos_panic)
 # Set debug level
 add_compile_definitions(DEBUG_LEVEL=0)
+# Set clock speed
+add_compile_definitions(SYS_CLK_MHZ=200)
 
 # Verify pico SDK version
-if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
-    message(FATAL_ERROR "Raspberry Pi Pico SDK version 2.0.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
+if (PICO_SDK_VERSION_STRING VERSION_LESS "2.1.1")
+    message(FATAL_ERROR "Raspberry Pi Pico SDK version 2.1.1 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
 # Initialize the SDK
