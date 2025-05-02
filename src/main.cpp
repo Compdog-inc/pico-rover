@@ -35,6 +35,7 @@
 #include "control/driverstation.h"
 
 #include "communication.h"
+#include "terminal.h"
 
 using namespace std::literals;
 
@@ -61,6 +62,8 @@ static void main_task(__unused void *params)
         vTaskDelete(NULL);
         return;
     }
+
+    Terminal::start();
 
     NetworkTableInstance *nt = new NetworkTableInstance();
     nt->startServer();
@@ -117,6 +120,8 @@ static void main_task(__unused void *params)
     }
 
     delete comm;
+
+    Terminal::stop();
 
     delete xbox;
     delete driverstation;

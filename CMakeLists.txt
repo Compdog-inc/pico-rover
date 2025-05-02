@@ -49,6 +49,7 @@ add_executable(rover
         # entry point
         src/main.cpp
         src/communication.cpp
+        src/terminal.cpp
         # subsystems
         src/subsystems/drivetrain.cpp
         src/subsystems/lights.cpp
